@@ -17,7 +17,7 @@ ADD pkg ./pkg
 
 # Install curl, tmux, bash, chromium
 RUN apk update && apk upgrade  \
-    && apk --no-cache add curl tmux bash chromium-swiftshader
+    && apk --no-cache add curl tmux bash
 
 #Create cron job
 RUN echo "curl localhost:8080/stat" > stat.sh && chmod +x stat.sh
