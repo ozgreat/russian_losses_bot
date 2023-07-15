@@ -6,9 +6,8 @@ This bot sends daily statistics of the russian army during the russian invasion 
 
 [Roadmap](ROADMAP.md) <br>
 [Telegram bot](https://t.me/shoporusnibot) <br>
-[Discord bot](https://discord.com/api/oauth2/authorize?client_id=1121874147803418644&permissions=3072&scope=bot)
+[Discord bot](https://discord.com/api/oauth2/authorize?client_id=1121874147803418644&permissions=3072&scope=bot) <br>
 
-<br>
 
 **You can buy me a coffee here:**
 
