@@ -1,8 +1,10 @@
 package db
 
-type Platform string
-type StatFormat string
-type BotLang string
+type (
+	Platform   string
+	StatFormat string
+	BotLang    string
+)
 
 const (
 	Discord  Platform = "DISCORD"

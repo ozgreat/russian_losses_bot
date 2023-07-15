@@ -14,46 +14,35 @@ type LDate time.Time
 type StatisticOfLoses struct {
 	Message string `json:"message"`
 	Data    struct {
-		Date      LDate  `json:"date"`
-		Day       int    `json:"day"`
-		Resource  string `json:"resource"`
-		WarStatus struct {
-			Code  int    `json:"code"`
-			Alias string `json:"alias"`
-		} `json:"war_status"`
-		Stats struct {
-			PersonnelUnits           int `json:"personnel_units"`
-			Tanks                    int `json:"tanks"`
-			ArmouredFightingVehicles int `json:"armoured_fighting_vehicles"`
-			ArtillerySystems         int `json:"artillery_systems"`
-			Mlrs                     int `json:"mlrs"`
-			AaWarfareSystems         int `json:"aa_warfare_systems"`
-			Planes                   int `json:"planes"`
-			Helicopters              int `json:"helicopters"`
-			VehiclesFuelTanks        int `json:"vehicles_fuel_tanks"`
-			WarshipsCutters          int `json:"warships_cutters"`
-			CruiseMissiles           int `json:"cruise_missiles"`
-			UavSystems               int `json:"uav_systems"`
-			SpecialMilitaryEquip     int `json:"special_military_equip"`
-			AtgmSrbmSystems          int `json:"atgm_srbm_systems"`
-		} `json:"stats"`
-		Increase struct {
-			PersonnelUnits           int `json:"personnel_units"`
-			Tanks                    int `json:"tanks"`
-			ArmouredFightingVehicles int `json:"armoured_fighting_vehicles"`
-			ArtillerySystems         int `json:"artillery_systems"`
-			Mlrs                     int `json:"mlrs"`
-			AaWarfareSystems         int `json:"aa_warfare_systems"`
-			Planes                   int `json:"planes"`
-			Helicopters              int `json:"helicopters"`
-			VehiclesFuelTanks        int `json:"vehicles_fuel_tanks"`
-			WarshipsCutters          int `json:"warships_cutters"`
-			CruiseMissiles           int `json:"cruise_missiles"`
-			UavSystems               int `json:"uav_systems"`
-			SpecialMilitaryEquip     int `json:"special_military_equip"`
-			AtgmSrbmSystems          int `json:"atgm_srbm_systems"`
-		} `json:"increase"`
+		Date     LDate     `json:"date"`
+		Resource string    `json:"resource"`
+		Status   WarStatus `json:"war_status"`
+		Stats    Stat      `json:"stats"`
+		Increase Stat      `json:"increase"`
+		Day      int       `json:"day"`
 	} `json:"data"`
+}
+
+type WarStatus struct {
+	Alias string `json:"alias"`
+	Code  int    `json:"code"`
+}
+
+type Stat struct {
+	PersonnelUnits           int `json:"personnel_units"`
+	Tanks                    int `json:"tanks"`
+	ArmouredFightingVehicles int `json:"armoured_fighting_vehicles"`
+	ArtillerySystems         int `json:"artillery_systems"`
+	Mlrs                     int `json:"mlrs"`
+	AaWarfareSystems         int `json:"aa_warfare_systems"`
+	Planes                   int `json:"planes"`
+	Helicopters              int `json:"helicopters"`
+	VehiclesFuelTanks        int `json:"vehicles_fuel_tanks"`
+	WarshipsCutters          int `json:"warships_cutters"`
+	CruiseMissiles           int `json:"cruise_missiles"`
+	UavSystems               int `json:"uav_systems"`
+	SpecialMilitaryEquip     int `json:"special_military_equip"`
+	AtgmSrbmSystems          int `json:"atgm_srbm_systems"`
 }
 
 func (i StatisticOfLoses) ToMessage() string {
@@ -119,17 +108,17 @@ func GetFreshInfo() (*StatisticOfLoses, error) {
 }
 
 func (d *LDate) UnmarshalJSON(b []byte) error {
-	value := s.Trim(string(b), `"`) //get rid of "
+	value := s.Trim(string(b), `"`) // get rid of "
 	if value == "" || value == "null" {
 		return nil
 	}
 
-	t, err := time.Parse("2006-01-02", value) //parse time
+	t, err := time.Parse("2006-01-02", value) // parse time
 	if err != nil {
 		return err
 	}
 
-	*d = LDate(t) //set result using the pointer
+	*d = LDate(t) // set result using the pointer
 	return nil
 }
 

@@ -11,13 +11,13 @@ RUN go mod download
 
 # Copy the source code. Note the slash at the end, as explained in
 # https://docs.docker.com/engine/reference/builder/#copy
-ADD cmd ./cmd
-ADD pkg ./pkg
+COPY cmd ./cmd
+COPY pkg ./pkg
 
 
 # Install curl, tmux, bash, chromium
 RUN apk update && apk upgrade  \
-    && apk --no-cache add curl tmux bash
+  && apk --no-cache add curl tmux bash
 
 #Create cron job
 RUN echo "curl localhost:8080/stat" > stat.sh && chmod +x stat.sh
