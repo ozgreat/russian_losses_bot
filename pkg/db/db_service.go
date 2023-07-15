@@ -2,8 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"github.com/disgoorg/log"
 	"os"
+
+	"github.com/disgoorg/log"
 )
 
 var service *Service = nil
@@ -162,9 +163,9 @@ func (s Service) getAllChats(prevErr error) ([]ChatEntity, error) {
 }
 
 func (s Service) handleQueryErrorAndRetry(chat ChatEntity, queryErr error, prevErr error,
-	retryFunc dbQuery) error {
+	retryFunc dbQuery,
+) error {
 	err := s.handleErrorAndOpenDb(queryErr, prevErr)
-
 	if err != nil {
 		return err
 	}
@@ -182,6 +183,10 @@ func (s Service) handleErrorAndOpenDb(queryErr error, prevErr error) error {
 	s.conn, openErr = openConnection()
 	if openErr != nil {
 		return openErr
+	}
+
+	if s.conn != nil {
+		log.Error("Connection is nil")
 	}
 
 	return nil

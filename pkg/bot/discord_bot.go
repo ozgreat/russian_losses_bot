@@ -2,22 +2,20 @@ package bot
 
 import (
 	"context"
-	"github.com/disgoorg/disgo/gateway"
 	"os"
-	"russian_losses/pkg/db"
-	"russian_losses/pkg/losses"
 	"strconv"
 	"strings"
 
-	"github.com/disgoorg/log"
-
-	"github.com/disgoorg/disgo/events"
-
-	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/snowflake/v2"
-
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/gateway"
+	"github.com/disgoorg/log"
+	"github.com/disgoorg/snowflake/v2"
+
+	"russian_losses/pkg/db"
+	"russian_losses/pkg/losses"
 )
 
 var dsBot *DiscordBot = nil

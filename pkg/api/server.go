@@ -1,9 +1,12 @@
 package api
 
 import (
-	"github.com/disgoorg/log"
+	"io"
 	"net/http"
 	"os"
+
+	"github.com/disgoorg/log"
+
 	"russian_losses/pkg/bot"
 	"russian_losses/pkg/db"
 	l "russian_losses/pkg/losses"
@@ -16,7 +19,7 @@ func HandleRequests() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func handleStat(w http.ResponseWriter, r *http.Request) {
+func handleStat(w http.ResponseWriter, _ *http.Request) {
 	service, err := db.GetDbService()
 	if err != nil {
 		log.Error(err)
@@ -30,8 +33,12 @@ func handleStat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	info, err := l.GetFreshInfo()
+	if err != nil {
+		log.Error(err)
+	}
 
 	sendStatistics(chats, info)
+	io.WriteString(w, "OK")
 }
 
 // onStop call bot.IBot StopBot function before application stop

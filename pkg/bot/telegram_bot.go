@@ -1,14 +1,16 @@
 package bot
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/disgoorg/log"
 	tg "github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 	tu "github.com/mymmrac/telego/telegoutil"
-	"os"
+
 	"russian_losses/pkg/db"
 	"russian_losses/pkg/losses"
-	"strconv"
 )
 
 // TelegramBot singleton
@@ -117,7 +119,8 @@ func handleUpdatesWebHookBot(bot *tg.Bot, path string) {
 
 // Creates and configure TelegramBot, uses function params to set onStart, onStop and onUpdate action
 func createTgBot(token string, onStart func(bot *tg.Bot), onUpdate func(bot *tg.Bot),
-	onStop func(bot *tg.Bot) func()) (*TelegramBot, error) {
+	onStop func(bot *tg.Bot) func(),
+) (*TelegramBot, error) {
 	bot, err := tg.NewBot(token, tg.WithDefaultLogger(false, true))
 	if err != nil {
 		return nil, err
@@ -141,7 +144,6 @@ func newTelegramBot(token string) (*TelegramBot, error) {
 
 func handleUpdates(bot *tg.Bot, updates <-chan tg.Update) {
 	h, err := th.NewBotHandler(bot, updates)
-
 	if err != nil {
 		log.Error(err)
 	}
@@ -164,7 +166,6 @@ func handleAddRemoveChat(bot *tg.Bot, update tg.Update) {
 	me, _ := bot.GetMe()
 	isMe := me.ID == member.NewChatMember.MemberUser().ID
 	chatFromDb, err := getChatFromDb(chatId)
-
 	if err != nil {
 		log.Error(err)
 	}
@@ -236,7 +237,7 @@ func sendInfo(chat *db.ChatEntity, bot *tg.Bot, info *losses.StatisticOfLoses) {
 	var err error
 	format := chat.Format
 	if format == db.Text {
-		err = sendTextInfo(id, bot, info, err)
+		err = sendTextInfo(id, bot, info)
 	} else {
 		err = db.FormatError{Msg: "Unknown format"}
 	}
@@ -246,9 +247,9 @@ func sendInfo(chat *db.ChatEntity, bot *tg.Bot, info *losses.StatisticOfLoses) {
 	}
 }
 
-func sendTextInfo(chatId int64, bot *tg.Bot, info *losses.StatisticOfLoses, err error) error {
+func sendTextInfo(chatId int64, bot *tg.Bot, info *losses.StatisticOfLoses) error {
 	message := info.ToMessage()
-	_, err = bot.SendMessage(&tg.SendMessageParams{
+	_, err := bot.SendMessage(&tg.SendMessageParams{
 		ChatID:    tu.ID(chatId),
 		Text:      message,
 		ParseMode: tg.ModeMarkdown,

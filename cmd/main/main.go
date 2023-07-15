@@ -1,8 +1,9 @@
 package main
 
 import (
-	_ "github.com/lib/pq"
 	"russian_losses/pkg/api"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
