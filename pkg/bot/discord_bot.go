@@ -34,7 +34,7 @@ func newDiscordBot(token string) (*DiscordBot, error) {
 			),
 		),
 
-		bot.WithEventListenerFunc(onEvent),
+		// bot.WithEventListenerFunc(onEvent),
 		bot.WithEventListenerFunc(commandListener),
 	)
 
