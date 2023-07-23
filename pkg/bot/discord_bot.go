@@ -34,7 +34,7 @@ func newDiscordBot(token string) (*DiscordBot, error) {
 			),
 		),
 
-		// bot.WithEventListenerFunc(onEvent),
+		bot.WithEventListenerFunc(onEvent),
 		bot.WithEventListenerFunc(commandListener),
 	)
 
@@ -115,7 +115,7 @@ func sendStatisticsToSingleChat(c bot.Client, chatId string) error {
 		return err
 	}
 
-	return sendStatistics(c, []db.ChatEntity{{ChatId: chatId}}, i)
+	return sendStatistics(c, []db.ChatEntity{{ChatId: chatId, BotPlatform: db.Discord}}, i)
 }
 
 func (DiscordBot) AddChat(chatId string) error {
