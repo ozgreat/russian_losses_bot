@@ -15,7 +15,7 @@ import (
 	"github.com/disgoorg/snowflake/v2"
 
 	"russian_losses/pkg/db"
-	"russian_losses/pkg/losses"
+	l "russian_losses/pkg/losses"
 )
 
 var dsBot *DiscordBot = nil
@@ -33,11 +33,26 @@ func newDiscordBot(token string) (*DiscordBot, error) {
 				gateway.IntentMessageContent,
 			),
 		),
+
 		bot.WithEventListenerFunc(onEvent),
+		bot.WithEventListenerFunc(commandListener),
 	)
+
+	commands := []discord.ApplicationCommandCreate{
+		discord.SlashCommandCreate{
+			Name:        "stat",
+			Description: "Sends fresh loses statistics",
+		},
+	}
 
 	if createError != nil {
 		return nil, createError
+	}
+
+	_, regErr := client.Rest().SetGlobalCommands(client.ApplicationID(), commands)
+
+	if regErr != nil {
+		return nil, regErr
 	}
 
 	openError := client.OpenGateway(context.TODO())
@@ -59,7 +74,11 @@ func GetDiscordBot() (*DiscordBot, error) {
 	return dsBot, nil
 }
 
-func (b DiscordBot) SendStatistics(chats []db.ChatEntity, info *losses.StatisticOfLoses) error {
+func (b DiscordBot) SendStatistics(chats []db.ChatEntity, info *l.StatisticOfLoses) error {
+	return sendStatistics(b.client, chats, info)
+}
+
+func sendStatistics(client bot.Client, chats []db.ChatEntity, info *l.StatisticOfLoses) error {
 	for _, chat := range chats {
 		if chat.BotPlatform != db.Discord {
 			continue
@@ -77,7 +96,7 @@ func (b DiscordBot) SendStatistics(chats []db.ChatEntity, info *losses.Statistic
 			// Fix for discord specific MarkDown
 			message = strings.ReplaceAll(message, "*", "**")
 
-			_, err := b.client.Rest().CreateMessage(
+			_, err := client.Rest().CreateMessage(
 				snowflake.ID(iChatId),
 				discord.NewMessageCreateBuilder().SetContent(message).Build(),
 			)
@@ -88,6 +107,15 @@ func (b DiscordBot) SendStatistics(chats []db.ChatEntity, info *losses.Statistic
 	}
 
 	return nil
+}
+
+func sendStatisticsToSingleChat(c bot.Client, chatId string) error {
+	i, err := l.GetFreshInfo()
+	if err != nil {
+		return err
+	}
+
+	return sendStatistics(c, []db.ChatEntity{{ChatId: chatId}}, i)
 }
 
 func (DiscordBot) AddChat(chatId string) error {
@@ -130,6 +158,16 @@ func handlePermissionUpdate(event *events.GuildApplicationCommandPermissionsUpda
 			addChannelToDb(channelPermission.ChannelID.String())
 		} else {
 			removeChannelFromDb(channelPermission.ChannelID.String())
+		}
+	}
+}
+
+func commandListener(event *events.ApplicationCommandInteractionCreate) {
+	data := event.SlashCommandInteractionData()
+	if data.CommandName() == "stat" {
+		err := sendStatisticsToSingleChat(event.Client(), event.Channel().ID().String())
+		if err != nil {
+			log.Error(err)
 		}
 	}
 }
