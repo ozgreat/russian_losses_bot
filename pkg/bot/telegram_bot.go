@@ -34,7 +34,7 @@ func GetTelegramBot() (*TelegramBot, error) {
 
 func (b TelegramBot) SendStatistics(chats []db.ChatEntity, info *losses.StatisticOfLoses) error {
 	for _, chat := range chats {
-		if chat.BotPlatform != db.Telegram {
+		if chat.BotPlatform != db.Telegram || !chat.DailyNotification {
 			continue
 		}
 		chatId, parseError := strconv.ParseInt(chat.ChatId, 10, 64)
@@ -155,6 +155,7 @@ func handleUpdates(bot *tg.Bot, updates <-chan tg.Update) {
 
 	// Handle commands
 	h.Handle(handleStat, th.CommandEqual("stat"))
+	h.Handle(handleChangeDailyMode, th.CommandEqual("changeDailyMode"))
 
 	h.Start()
 }
@@ -191,6 +192,33 @@ func handleStat(bot *tg.Bot, update tg.Update) {
 	sendInfo(&db.ChatEntity{ChatId: i}, bot, info)
 }
 
+func handleChangeDailyMode(bot *tg.Bot, update tg.Update) {
+	chatId := update.Message.Chat.ID
+	chat, getFromDbErr := getChatFromDb(chatId)
+	if getFromDbErr != nil {
+		log.Error(getFromDbErr)
+	}
+
+	daily := !chat.DailyNotification
+
+	updateDailyNotification(*chat, daily)
+
+	var message string
+	if daily {
+		message = "Щоденні звіщення увімкнуті"
+	} else {
+		message = "Щоденні звіщення вимкнуті"
+	}
+	_, err := bot.SendMessage(&tg.SendMessageParams{
+		ChatID:    tu.ID(chatId),
+		Text:      message,
+		ParseMode: tg.ModeMarkdown,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+}
+
 func getChatFromDb(id int64) (*db.ChatEntity, error) {
 	service, dbError := db.GetDbService()
 	if dbError != nil {
@@ -216,6 +244,15 @@ func removeChat(id string) error {
 	}
 
 	return service.RemoveChat(id, db.Telegram)
+}
+
+func updateDailyNotification(chat db.ChatEntity, daily bool) error {
+	service, dbError := db.GetDbService()
+	if dbError != nil {
+		return dbError
+	}
+
+	return service.UpdateDaily(chat, daily)
 }
 
 func sendInfo(chat *db.ChatEntity, bot *tg.Bot, info *losses.StatisticOfLoses) {

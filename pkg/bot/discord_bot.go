@@ -20,6 +20,11 @@ import (
 
 var dsBot *DiscordBot = nil
 
+const (
+	statCommandName            string = "stat"
+	changeDailyModeCommandName string = "daily"
+)
+
 type DiscordBot struct {
 	client bot.Client
 }
@@ -38,15 +43,19 @@ func newDiscordBot(token string) (*DiscordBot, error) {
 		bot.WithEventListenerFunc(commandListener),
 	)
 
-	commands := []discord.ApplicationCommandCreate{
-		discord.SlashCommandCreate{
-			Name:        "stat",
-			Description: "Sends fresh loses statistics",
-		},
-	}
-
 	if createError != nil {
 		return nil, createError
+	}
+
+	commands := []discord.ApplicationCommandCreate{
+		discord.SlashCommandCreate{
+			Name:        statCommandName,
+			Description: "Відправляє свіжу статистику втрат окупантів",
+		},
+		discord.SlashCommandCreate{
+			Name:        changeDailyModeCommandName,
+			Description: "Увімкнути/Вимкнути щоденне відправлення статистики",
+		},
 	}
 
 	_, regErr := client.Rest().SetGlobalCommands(client.ApplicationID(), commands)
@@ -67,7 +76,8 @@ func newDiscordBot(token string) (*DiscordBot, error) {
 func GetDiscordBot() (*DiscordBot, error) {
 	if dsBot == nil {
 		var err error
-		dsBot, err = newDiscordBot(os.Getenv("discordToken"))
+		getenv := os.Getenv("discordToken")
+		dsBot, err = newDiscordBot(getenv)
 		return dsBot, err
 	}
 
@@ -80,7 +90,7 @@ func (b DiscordBot) SendStatistics(chats []db.ChatEntity, info *l.StatisticOfLos
 
 func sendStatistics(client bot.Client, chats []db.ChatEntity, info *l.StatisticOfLoses) error {
 	for _, chat := range chats {
-		if chat.BotPlatform != db.Discord {
+		if chat.BotPlatform != db.Discord || !chat.DailyNotification {
 			continue
 		}
 
@@ -118,6 +128,36 @@ func sendStatisticsToSingleChat(c bot.Client, chatId string) error {
 	return sendStatistics(c, []db.ChatEntity{{ChatId: chatId, BotPlatform: db.Discord}}, i)
 }
 
+func changeDailyMode(c bot.Client, chatId int64) error {
+	service, dbError := db.GetDbService()
+	if dbError != nil {
+		return dbError
+	}
+
+	chat, getError := service.GetChat(strconv.FormatInt(chatId, 10), db.Discord)
+	if getError != nil {
+		return getError
+	}
+
+	updateErr := updateDaily(chatId, !chat.DailyNotification)
+	if updateErr != nil {
+		return updateErr
+	}
+
+	var message string
+	if !chat.DailyNotification {
+		message = "Щоденні звіщення увімкнуті"
+	} else {
+		message = "Щоденні звіщення вимкнуті"
+	}
+
+	_, createMessageErr := c.Rest().CreateMessage(
+		snowflake.ID(chatId),
+		discord.NewMessageCreateBuilder().SetContent(message).Build(),
+	)
+	return createMessageErr
+}
+
 func (DiscordBot) AddChat(chatId string) error {
 	service, err := db.GetDbService()
 	if err != nil {
@@ -125,6 +165,17 @@ func (DiscordBot) AddChat(chatId string) error {
 	}
 
 	return service.InsertChatId(chatId, db.Discord)
+}
+
+func updateDaily(chatId int64, daily bool) error {
+	service, openDbErr := db.GetDbService()
+	if openDbErr != nil {
+		return openDbErr
+	}
+
+	id := strconv.FormatInt(chatId, 10)
+
+	return service.UpdateDaily(db.ChatEntity{ChatId: id, BotPlatform: db.Discord}, daily)
 }
 
 func (b DiscordBot) StopBot() {
@@ -164,8 +215,13 @@ func handlePermissionUpdate(event *events.GuildApplicationCommandPermissionsUpda
 
 func commandListener(event *events.ApplicationCommandInteractionCreate) {
 	data := event.SlashCommandInteractionData()
-	if data.CommandName() == "stat" {
+	if data.CommandName() == statCommandName {
 		err := sendStatisticsToSingleChat(event.Client(), event.Channel().ID().String())
+		if err != nil {
+			log.Error(err)
+		}
+	} else if data.CommandName() == changeDailyModeCommandName {
+		err := changeDailyMode(event.Client(), int64(event.Channel().ID()))
 		if err != nil {
 			log.Error(err)
 		}

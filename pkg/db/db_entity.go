@@ -18,10 +18,11 @@ const (
 )
 
 type ChatEntity struct {
-	ChatId      string
-	BotPlatform Platform
-	Lang        BotLang
-	Format      StatFormat
+	ChatId            string
+	BotPlatform       Platform
+	Lang              BotLang
+	Format            StatFormat
+	DailyNotification bool
 }
 
 type dbQuery func(chat ChatEntity, prevErr error) error

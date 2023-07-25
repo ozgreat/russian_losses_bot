@@ -60,11 +60,21 @@ func (s Service) UpdateFormat(chat *ChatEntity, format StatFormat) error {
 		chat.ChatId,
 		chat.BotPlatform,
 	)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
+}
+
+func (s Service) UpdateDaily(chat ChatEntity, d bool) error {
+	_, err := s.conn.Query(`
+    update chats
+    set daily = $1
+    where chat_id = $2 and platform = $3`,
+		d,
+		chat.ChatId,
+		chat.BotPlatform,
+	)
+
+	return err
 }
 
 func (s Service) GetChat(chatId string, platform Platform) (*ChatEntity, error) {
@@ -75,13 +85,14 @@ func (s Service) getChat(chat ChatEntity, prevErr error) (*ChatEntity, error) {
 	var chatId string
 	var platform Platform
 	var format StatFormat
+	var daily bool
 
 	row := s.conn.QueryRow(
-		"select chat_id, platform, format from chats where chat_id = $1 and platform = $2 limit 1;",
+		"select chat_id, platform, format, daily from chats where chat_id = $1 and platform = $2 limit 1;",
 		chat.ChatId,
 		chat.BotPlatform,
 	)
-	queryErr := row.Scan(&chatId, &platform, &format)
+	queryErr := row.Scan(&chatId, &platform, &format, &daily)
 
 	if queryErr != nil {
 		if queryErr == sql.ErrNoRows {
@@ -101,7 +112,7 @@ func (s Service) getChat(chat ChatEntity, prevErr error) (*ChatEntity, error) {
 		return s.getChat(chat, queryErr)
 	}
 
-	return &ChatEntity{ChatId: chatId, BotPlatform: platform, Format: format}, nil
+	return &ChatEntity{ChatId: chatId, BotPlatform: platform, Format: format, DailyNotification: daily}, nil
 }
 
 func (s Service) RemoveChat(chatId string, platform Platform) error {
@@ -127,7 +138,7 @@ func (s Service) GetAllChats() ([]ChatEntity, error) {
 }
 
 func (s Service) getAllChats(prevErr error) ([]ChatEntity, error) {
-	rows, queryError := s.conn.Query("select chat_id, platform, format from chats;")
+	rows, queryError := s.conn.Query("select chat_id, platform, format, daily from chats;")
 	if queryError != nil {
 		if prevErr != nil {
 			return nil, queryError
@@ -147,15 +158,16 @@ func (s Service) getAllChats(prevErr error) ([]ChatEntity, error) {
 		var chatId string
 		var platform Platform
 		var format StatFormat
+		var daily bool
 
-		scanErr := rows.Scan(&chatId, &platform, &format)
+		scanErr := rows.Scan(&chatId, &platform, &format, &daily)
 		if scanErr != nil {
 			return nil, scanErr
 		}
 
 		result = append(
 			result,
-			ChatEntity{ChatId: chatId, BotPlatform: platform, Format: format},
+			ChatEntity{ChatId: chatId, BotPlatform: platform, Format: format, DailyNotification: daily},
 		)
 	}
 
