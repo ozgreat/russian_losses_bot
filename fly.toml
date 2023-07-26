@@ -6,3 +6,4 @@ primary_region = "waw"
   force_https = true
   auto_start_machines = true
   min_machines_running = 1
+  max_machines_running = 1
