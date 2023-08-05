@@ -28,20 +28,37 @@ func GetStatListener() bot.EventListener {
 func handleStat(event *events.ApplicationCommandInteractionCreate) {
 	data := event.SlashCommandInteractionData()
 	if data.CommandName() == StatCommandName {
-		err := sendStatisticsToSingleChat(event.Client(), event.Channel().ID().String())
+		err := sendStatisticsToSingleChat(event)
 		if err != nil {
 			log.Error(err)
 		}
 	}
 }
 
-func sendStatisticsToSingleChat(c bot.Client, chatId string) error {
+func sendStatisticsToSingleChat(event *events.ApplicationCommandInteractionCreate) error {
 	i, err := l.GetFreshInfo()
 	if err != nil {
 		return err
 	}
 
-	return sendStat(c, db.ChatEntity{ChatId: chatId, BotPlatform: db.Discord}, i)
+	go func() {
+		message := formatStat(i)
+
+		err := event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(message).Build())
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+
+	return nil
+}
+
+func formatStat(i *l.StatisticOfLoses) string {
+	message := i.ToMessage()
+
+	// Fix for discord specific MarkDown
+	message = strings.ReplaceAll(message, "*", "**")
+	return message
 }
 
 func SendStatistics(client bot.Client, chats []db.ChatEntity, info *l.StatisticOfLoses) error {
@@ -59,7 +76,7 @@ func SendStatistics(client bot.Client, chats []db.ChatEntity, info *l.StatisticO
 	return nil
 }
 
-func sendStat(client bot.Client, chat db.ChatEntity, info *l.StatisticOfLoses) error {
+func sendStat(client bot.Client, chat db.ChatEntity, i *l.StatisticOfLoses) error {
 	iChatId, parseError := strconv.ParseInt(chat.ChatId, 10, 64)
 
 	if parseError != nil {
@@ -67,10 +84,7 @@ func sendStat(client bot.Client, chat db.ChatEntity, info *l.StatisticOfLoses) e
 	}
 
 	go func() {
-		message := info.ToMessage()
-
-		// Fix for discord specific MarkDown
-		message = strings.ReplaceAll(message, "*", "**")
+		message := formatStat(i)
 
 		_, err := client.Rest().CreateMessage(
 			snowflake.ID(iChatId),
