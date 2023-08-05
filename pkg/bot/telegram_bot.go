@@ -155,7 +155,7 @@ func handleUpdates(bot *tg.Bot, updates <-chan tg.Update) {
 
 	// Handle commands
 	h.Handle(handleStat, th.CommandEqual("stat"))
-	h.Handle(handleChangeDailyMode, th.CommandEqual("changeDailyMode"))
+	h.Handle(handleChangeDailyMode, th.CommandEqual("daily"))
 
 	h.Start()
 }
