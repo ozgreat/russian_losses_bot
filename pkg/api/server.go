@@ -1,11 +1,9 @@
 package api
 
 import (
+	"github.com/disgoorg/log"
 	"io"
 	"net/http"
-	"os"
-
-	"github.com/disgoorg/log"
 
 	"russian_losses/pkg/bot"
 	"russian_losses/pkg/db"
@@ -13,7 +11,7 @@ import (
 )
 
 func HandleRequests() {
-	getBots()
+	bot.GetBots()
 	defer onStop()
 	http.HandleFunc("/stat", handleStat)
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -35,38 +33,25 @@ func handleStat(w http.ResponseWriter, _ *http.Request) {
 	info, err := l.GetFreshInfo()
 	if err != nil {
 		log.Error(err)
+		return
 	}
 
 	sendStatistics(chats, info)
-	io.WriteString(w, "OK")
+	_, err = io.WriteString(w, "OK")
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 // onStop call bot.IBot StopBot function before application stop
 func onStop() {
-	for _, statisticBot := range getBots() {
+	for _, statisticBot := range bot.GetBots() {
 		statisticBot.StopBot()
 	}
 }
 
-// getBots returns bots
-func getBots() []bot.IBot {
-	discordBot, discordError := bot.GetDiscordBot()
-	if discordError != nil {
-		log.Panic(discordError)
-		os.Exit(1)
-	}
-
-	telegramBot, telergramError := bot.GetTelegramBot()
-	if telergramError != nil {
-		log.Panic(telergramError)
-		os.Exit(1)
-	}
-
-	return []bot.IBot{discordBot, telegramBot}
-}
-
 func sendStatistics(chats []db.ChatEntity, info *l.StatisticOfLoses) {
-	for _, iBot := range getBots() {
+	for _, iBot := range bot.GetBots() {
 		err := iBot.SendStatistics(chats, info)
 		if err != nil {
 			log.Error(err)
