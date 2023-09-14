@@ -63,6 +63,7 @@ func (i StatisticOfLoses) ToMessage() string {
 Кораблі/Катери: %d (*+%d*)
 Крилаті ракети: %d (*+%d*)
 Безпілотні літальні апарати: %d (*+%d*)
+Спецтехніка: %d (*+%d*)
 Установки ОТРК/ТРК: %d (*+%d*)
 
 Посилання на зведення генштабу: %s
@@ -83,6 +84,7 @@ func (i StatisticOfLoses) ToMessage() string {
 		stats.CruiseMissiles, incr.CruiseMissiles,
 		stats.UavSystems, incr.UavSystems,
 		stats.SpecialMilitaryEquip, incr.SpecialMilitaryEquip,
+		stats.AtgmSrbmSystems, incr.AtgmSrbmSystems,
 		d.Resource,
 	)
 }
