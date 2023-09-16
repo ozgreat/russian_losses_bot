@@ -43,6 +43,7 @@ type Stat struct {
 	UavSystems               int `json:"uav_systems"`
 	SpecialMilitaryEquip     int `json:"special_military_equip"`
 	AtgmSrbmSystems          int `json:"atgm_srbm_systems"`
+	Submarines               int `json:"submarines"`
 }
 
 func (i StatisticOfLoses) ToMessage() string {
@@ -65,6 +66,7 @@ func (i StatisticOfLoses) ToMessage() string {
 Безпілотні літальні апарати: %d (*+%d*)
 Спецтехніка: %d (*+%d*)
 Установки ОТРК/ТРК: %d (*+%d*)
+Підводні човни: %d (*+%d*)
 
 Посилання на зведення генштабу: %s
 `
@@ -85,6 +87,7 @@ func (i StatisticOfLoses) ToMessage() string {
 		stats.UavSystems, incr.UavSystems,
 		stats.SpecialMilitaryEquip, incr.SpecialMilitaryEquip,
 		stats.AtgmSrbmSystems, incr.AtgmSrbmSystems,
+		stats.Submarines, incr.Submarines,
 		d.Resource,
 	)
 }
