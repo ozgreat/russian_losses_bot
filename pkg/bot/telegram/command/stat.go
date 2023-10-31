@@ -8,6 +8,7 @@ import (
 	"russian_losses/pkg/db"
 	"russian_losses/pkg/losses"
 	"strconv"
+	strs "strings"
 )
 
 func HandleStat(bot *tg.Bot, update tg.Update) {
@@ -50,11 +51,16 @@ func SendInfo(chat *db.ChatEntity, bot *tg.Bot, info *losses.StatisticOfLoses) {
 }
 
 func sendTextInfo(chatId int64, bot *tg.Bot, info *losses.StatisticOfLoses) error {
-	message := info.ToMessage()
+	message := replaceSpecial(info.ToMessage())
 	_, err := bot.SendMessage(&tg.SendMessageParams{
 		ChatID:    tu.ID(chatId),
 		Text:      message,
-		ParseMode: tg.ModeMarkdown,
+		ParseMode: tg.ModeMarkdownV2,
 	})
 	return err
+}
+
+func replaceSpecial(msg string) string {
+	return strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(msg, ".", "\\."), "+", "\\+"),
+		"=", "\\=")
 }
