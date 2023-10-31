@@ -54,7 +54,7 @@ func sendTextInfo(chatId int64, bot *tg.Bot, info *losses.StatisticOfLoses) erro
 	_, err := bot.SendMessage(&tg.SendMessageParams{
 		ChatID:    tu.ID(chatId),
 		Text:      message,
-		ParseMode: tg.ModeMarkdown,
+		ParseMode: tg.ModeMarkdownV2,
 	})
 	return err
 }
