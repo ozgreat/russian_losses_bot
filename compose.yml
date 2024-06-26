@@ -1,0 +1,24 @@
+version: "3"
+services:
+  bot:
+    depends_on:
+      - postgres
+    build: .
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - discordToken=${discordToken}
+      - telegramToken=${telegramToken}
+      - DATABASE_URL=${DATABASE_URL}
+  postgres:
+    image: "postgres:15.3-alpine"
+    environment:
+      - POSTGRES_USER=${PG_USERNAME}
+      - POSTGRES_PASSWORD=${PG_PASS}
+      - POSTGRES_DB=${DB_NAME}
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "18080:8080"

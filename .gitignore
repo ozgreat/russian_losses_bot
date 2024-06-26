@@ -142,3 +142,4 @@ fabric.properties
 
 # Todo maybe remove when create dev container
 /.vscode
+.env
