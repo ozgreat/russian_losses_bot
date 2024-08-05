@@ -52,6 +52,7 @@ func SendInfo(chat *db.ChatEntity, bot *tg.Bot, info *losses.StatisticOfLoses) {
 
 func sendTextInfo(chatId int64, bot *tg.Bot, info *losses.StatisticOfLoses) error {
 	message := replaceSpecial(info.ToMessage())
+	log.Info(message)
 	_, err := bot.SendMessage(&tg.SendMessageParams{
 		ChatID:    tu.ID(chatId),
 		Text:      message,
@@ -61,6 +62,6 @@ func sendTextInfo(chatId int64, bot *tg.Bot, info *losses.StatisticOfLoses) erro
 }
 
 func replaceSpecial(msg string) string {
-	return strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(msg, ".", "\\."), "+", "\\+"),
-		"=", "\\="), ")", "\\)"), "(", "\\("), "_", "\\_")
+	return strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(strs.ReplaceAll(msg, ".", "\\."), "+", "\\+"),
+		"=", "\\="), ")", "\\)"), "(", "\\("), "_", "\\_"), "-", "\\-")
 }
