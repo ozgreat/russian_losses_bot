@@ -1,24 +1,38 @@
-version: "3"
 services:
   bot:
     depends_on:
       - postgres
-    build: .
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
       - discordToken=${discordToken}
       - telegramToken=${telegramToken}
       - DATABASE_URL=${DATABASE_URL}
+  cron:
+    build:
+      context: ./cron
+    depends_on:
+      - bot
+    container_name: stat_cron
   postgres:
     image: "postgres:15.3-alpine"
+    restart: always
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - "15432:5432"
     environment:
       - POSTGRES_USER=${PG_USERNAME}
       - POSTGRES_PASSWORD=${PG_PASS}
       - POSTGRES_DB=${DB_NAME}
   adminer:
     image: adminer
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
     restart: always
     ports:
       - "18080:8080"

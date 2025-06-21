@@ -1,0 +1,2 @@
+# Call /stat at 9 AM daily
+0 9 * * * curl http://bot:8080/stat >> /var/log/stat-cron.log 2>&1
